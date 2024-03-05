@@ -2,6 +2,7 @@
 This module takes care of starting the API Server, Loading the DB and Adding the endpoints
 """
 from flask import Flask, request, jsonify, url_for, Blueprint
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from api.models import db, User
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
@@ -20,3 +21,43 @@ def handle_hello():
     }
 
     return jsonify(response_body), 200
+
+@api.route('/signup', methods=['POST'])
+def signup():
+    data = request.get_json()
+
+    if 'email' not in data or 'password' not in data:
+        return jsonify(message='Email and password are required'), 400
+
+    existing_user = User.query.filter_by(email=data['email']).first()
+    if existing_user:
+        return jsonify(message='Email is already taken'), 400
+
+
+
+@api.route('/login', methods=['POST'])
+def login():
+    data = request.get_json()
+
+    if 'email' not in data or 'password' not in data:
+        return jsonify(message='Email and password are required'), 400
+
+
+@api.route('/private', methods=['GET'])
+@jwt_required()
+def private():
+    current_user = get_jwt_identity()
+    return jsonify(logged_in_as=current_user), 200
+
+@api.route("/token", methods=["POST"])
+def create_token():
+    username = request.json.get("username", None)
+    password = request.json.get("password", None)
+
+    user = User.query.filter_by(username=username, password=password).first()
+
+    if user is None:
+        return jsonify({"msg": "Bad username or password"}), 401
+    
+    access_token = create_access_token(identity=user.id)
+    return jsonify({ "token": access_token, "user_id": user.id })
