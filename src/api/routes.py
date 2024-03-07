@@ -7,6 +7,7 @@ from api.models import db, User
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
 
+
 api = Blueprint('api', __name__)
 
 # Allow CORS requests to this API
@@ -32,7 +33,10 @@ def signup():
     existing_user = User.query.filter_by(email=data['email']).first()
     if existing_user:
         return jsonify(message='Email is already taken'), 400
-
+    user=User(email=data['email'], password=data["password"], is_active=True)
+    db.session.add(user)
+    db.session.commit()
+    return jsonify({'message':" Account created successfully "}), 201
 
 
 @api.route('/login', methods=['POST'])
@@ -41,6 +45,11 @@ def login():
 
     if 'email' not in data or 'password' not in data:
         return jsonify(message='Email and password are required'), 400
+    user=User.query.filter_by(email=data['email'],password=data['password']).first()
+    if user is None:
+        return jsonify({"message": "Wrong email or password"}), 401 
+    access_token = create_access_token(identity=user.id)
+    return jsonify({ "token": access_token, "user_id": user.id })
 
 
 @api.route('/private', methods=['GET'])
@@ -49,15 +58,4 @@ def private():
     current_user = get_jwt_identity()
     return jsonify(logged_in_as=current_user), 200
 
-@api.route("/token", methods=["POST"])
-def create_token():
-    username = request.json.get("username", None)
-    password = request.json.get("password", None)
-
-    user = User.query.filter_by(username=username, password=password).first()
-
-    if user is None:
-        return jsonify({"msg": "Bad username or password"}), 401
     
-    access_token = create_access_token(identity=user.id)
-    return jsonify({ "token": access_token, "user_id": user.id })
