@@ -8,7 +8,8 @@ export const Signup = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleSubmmit = async () => {
+  const handleSubmmit = async (e) => {
+    e.preventDefault()
     let result = await actions.signup(email, password);
     if (result == false) {
       alert("An error occured while trying to sign you up");
@@ -22,7 +23,7 @@ export const Signup = () => {
       <div class="row">
         <div class="col-6 mx-auto">
           <div>
-            <form>
+            <form onSubmit={handleSubmmit}>
               <div class="ms-5 me-5">
                 <label for="exampleInputEmail1" class="form-label mt-4">
                   Email address

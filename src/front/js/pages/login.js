@@ -8,7 +8,8 @@ export const Login = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
 
-    const handleLogin = async () => {
+    const handleLogin = async (e) => {
+      e.preventDefault()
         let result = await actions.login(email, password);
         if (result === false) {
             alert("Invalid credentials");
@@ -22,7 +23,7 @@ export const Login = () => {
          <div class="row">
            <div class="col-6 mx-auto">
              <div>
-               <form>
+               <form onSubmit={handleLogin}>
                  <div class="ms-5 me-5">
                    <label for="exampleInputEmail1" class="form-label mt-4">
                      Email address
